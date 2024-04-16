@@ -42,6 +42,10 @@ func WhiteFill(t screen.Texture) {
 	t.Fill(t.Bounds(), color.White, screen.Src)
 }
 
+// func Test(t screen.Texture) {
+// 	t.Fill()
+// }
+
 // GreenFill зафарбовує тестуру у зелений колір. Може бути викоистана як Operation через OperationFunc(GreenFill).
 func GreenFill(t screen.Texture) {
 	t.Fill(t.Bounds(), color.RGBA{G: 0xff, A: 0xff}, screen.Src)
