@@ -22,6 +22,7 @@ func main() {
 
 	pv.OnScreenReady = opLoop.Start
 	opLoop.Receiver = &pv
+	parser.CrossAvailable = true
 
 	go func() {
 		http.Handle("/", lang.HttpHandler(&opLoop, &parser))

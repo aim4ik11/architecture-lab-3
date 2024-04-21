@@ -8,10 +8,12 @@ import (
 	"strings"
 
 	"github.com/aim4ik11/architecture-lab-3/painter"
+	"github.com/aim4ik11/architecture-lab-3/ui"
 )
 
 // Parser уміє прочитати дані з вхідного io.Reader та повернути список операцій представлені вхідним скриптом.
 type Parser struct {
+	Crosses     []*ui.Cross
 }
 
 type OperationStruct struct {
@@ -34,10 +36,10 @@ func (p *Parser) CommandParser(commandName string, opList []OperationStruct, arg
 		return painter.OperationFunc(painter.GreenFill)
 	case "bgrect":
 		return complexOperation(painter.DrawRectangle(args))
-	// case "move":
-	// 	return painter.OperationFunc(painter.)
-	// case "figure":
-	// 	return painter.OperationFunc(painter.WhiteFill)
+	case "move":
+		return complexOperation(painter.Move(args))
+	case "figure":
+		return complexOperation(painter.Figure(args))
 	case "update":
 		return painter.UpdateOp
 	case "reset":

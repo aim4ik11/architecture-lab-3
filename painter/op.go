@@ -4,21 +4,29 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"image/draw"
 	"strconv"
 
 	"golang.org/x/exp/shiny/screen"
 )
 
 func getCordsByArgs(width int, height int, floatArgs []float64) []int {
-	cords := make([]int, 4)
+	if len(floatArgs) % 2 != 0 {
+		return nil
+	}
+	
+	cords := make([]int, len(floatArgs))
 
 	fWidth := float64(width)
 	fHeight := float64(height)
 
-	cords[0] = int(fWidth * floatArgs[0])
-	cords[1] = int(fHeight * floatArgs[1])
-	cords[2] = int(fWidth * floatArgs[2])
-	cords[3] = int(fHeight * floatArgs[3])
+	for index := range(floatArgs){
+		if index % 2 == 0 {
+			cords[index] = int(fWidth * floatArgs[index])
+		} else {
+			cords[index] = int(fHeight * floatArgs[index])
+		}
+	}
 
 	return cords
 }
@@ -85,8 +93,8 @@ func BlackFill(t screen.Texture) {
 }
 
 func DrawRectangle(args []string) OperationFunc {
-	if len(args) < 4 {
-		fmt.Println("Not enough args to draw a rect")
+	if len(args) != 4 {
+		fmt.Println("Wrong amount of arguments to draw a rectangle")
 		return nil
 	}
 	floatArgs, err := convertArgs(args)
@@ -102,5 +110,57 @@ func DrawRectangle(args []string) OperationFunc {
 		startPoint := image.Point{int(cords[0]), int(cords[1])}
 		endPoint := image.Point{int(cords[2]), int(cords[3])}
 		t.Fill(image.Rectangle{startPoint, endPoint}, color.White, screen.Src)
+	}
+}
+
+func Figure(args []string) OperationFunc {
+	if len(args) != 2 {
+		fmt.Println("Wrong amount of arguments to move figures")
+		return nil
+	}
+	floatArgs, err := convertArgs(args)
+	if err != nil {
+		fmt.Println("Error parsing string")
+		fmt.Println(err)
+		return nil
+	}
+	return func(t screen.Texture) {
+		cords := getCordsByArgs(t.Bounds().Dx(), t.Bounds().Dy(), floatArgs)
+
+		s := 400
+		w := 100
+
+		x := (int(cords[0]) - s/2)
+    y := (int(cords[1]) - s/2)
+
+		x1 := x + s
+    y1 := y + s/2 + w/2
+    y2 := y + s/2 - w/2
+
+    t.Fill(image.Rect(x, y1, x1, y2), color.RGBA{255, 255, 0, 255}, draw.Src)
+
+    x1 = x + s/2 + w/2
+    x2 := x + s/2 - w/2
+    y2 = y + s
+    t.Fill(image.Rect(x1, y, x2, y2), color.RGBA{255, 255, 0, 255}, draw.Src)
+	}
+}
+
+func Move(args []string) OperationFunc {
+	if len(args) != 2 {
+		fmt.Println("Wrong amount of arguments to move figures")
+		return nil
+	}
+	floatArgs, err := convertArgs(args)
+	if err != nil {
+		fmt.Println("Error parsing string")
+		fmt.Println(err)
+		return nil
+	}
+	return func(t screen.Texture) {
+
+		cords := getCordsByArgs(t.Bounds().Dx(), t.Bounds().Dy(), floatArgs)
+
+		if()
 	}
 }
