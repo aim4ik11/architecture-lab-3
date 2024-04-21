@@ -30,7 +30,7 @@ var size = image.Pt(400, 400)
 // Start запускає цикл подій. Цей метод потрібно запустити до того, як викликати на ньому будь-які інші методи.
 func (l *Loop) Start(s screen.Screen) {
 	l.next, _ = s.NewTexture(size)
-	l.prev, _ = s.NewTexture(size)
+	// l.prev, _ = s.NewTexture(size)
 	l.stop = make(chan struct{})
 
 	go func() {
@@ -42,7 +42,7 @@ func (l *Loop) Start(s screen.Screen) {
 
 			if update {
 				l.Receiver.Update(l.next)
-				l.next, l.prev = l.prev, l.next
+				// l.next, l.prev = l.prev, l.next
 			}
 		}
 		close(l.stop)
