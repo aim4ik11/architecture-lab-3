@@ -1,10 +1,39 @@
 package painter
 
 import (
+	"fmt"
+	"image"
 	"image/color"
+	"strconv"
 
 	"golang.org/x/exp/shiny/screen"
 )
+
+func getCordsByArgs(width int, height int, floatArgs []float64) []int {
+	cords := make([]int, 4)
+
+	fWidth := float64(width)
+	fHeight := float64(height)
+
+	cords[0] = int(fWidth * floatArgs[0])
+	cords[1] = int(fHeight * floatArgs[1])
+	cords[2] = int(fWidth * floatArgs[2])
+	cords[3] = int(fHeight * floatArgs[3])
+
+	return cords
+}
+
+func convertArgs(args []string) ([]float64, error) {
+	parsedValues := make([]float64, len(args))
+	for i, str := range args {
+		num, err := strconv.ParseFloat(str, 64)
+		if err != nil {
+			return nil, err
+		}
+		parsedValues[i] = num
+	}
+	return parsedValues, nil
+}
 
 // Operation змінює вхідну текстуру.
 type Operation interface {
@@ -55,5 +84,23 @@ func BlackFill(t screen.Texture) {
 	t.Fill(t.Bounds(), color.Black, screen.Src)
 }
 
-func test() {
+func DrawRectangle(args []string) OperationFunc {
+	if len(args) < 4 {
+		fmt.Println("Not enough args to draw a rect")
+		return nil
+	}
+	floatArgs, err := convertArgs(args)
+	if err != nil {
+		fmt.Println("Error parsing string")
+		fmt.Println(err)
+		return nil
+	}
+	return func(t screen.Texture) {
+
+		cords := getCordsByArgs(t.Bounds().Dx(), t.Bounds().Dy(), floatArgs)
+
+		startPoint := image.Point{int(cords[0]), int(cords[1])}
+		endPoint := image.Point{int(cords[2]), int(cords[3])}
+		t.Fill(image.Rectangle{startPoint, endPoint}, color.White, screen.Src)
+	}
 }
