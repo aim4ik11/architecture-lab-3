@@ -1,0 +1,9 @@
+#!/bin/bash
+
+x="$1"
+y="$2"
+
+curl -d @- http://localhost:17000 <<EOF
+move $x $y
+update
+EOF
