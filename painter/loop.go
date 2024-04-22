@@ -16,8 +16,7 @@ type Receiver interface {
 type Loop struct {
 	Receiver Receiver
 
-	next screen.Texture // текстура, яка зараз формується
-	prev screen.Texture // текстура, яка була відправлення останнього разу у Receiver
+	buffer screen.Texture // текстура, яка зараз формується
 
 	mq messageQueue
 
@@ -29,8 +28,7 @@ var size = image.Pt(800, 800)
 
 // Start запускає цикл подій. Цей метод потрібно запустити до того, як викликати на ньому будь-які інші методи.
 func (l *Loop) Start(s screen.Screen) {
-	l.next, _ = s.NewTexture(size)
-	// l.prev, _ = s.NewTexture(size)
+	l.buffer, _ = s.NewTexture(size)
 	l.stop = make(chan struct{})
 
 	go func() {
@@ -38,11 +36,10 @@ func (l *Loop) Start(s screen.Screen) {
 
 			op := l.mq.pull()
 
-			update := op.Do(l.next)
+			update := op.Do(l.buffer)
 
 			if update {
-				l.Receiver.Update(l.next)
-				// l.next, l.prev = l.prev, l.next
+				l.Receiver.Update(l.buffer)
 			}
 		}
 		close(l.stop)

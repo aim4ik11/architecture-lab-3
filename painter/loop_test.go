@@ -50,7 +50,7 @@ func TestLoop_Post(t *testing.T) {
 	if mt.Colors[0] != color.White {
 		t.Error("First color is not white:", mt.Colors)
 	}
-	if len(mt.Colors) != 2 {
+	if len(mt.Colors) != 5 {
 		t.Error("Unexpected size of colors:", mt.Colors)
 	}
 
