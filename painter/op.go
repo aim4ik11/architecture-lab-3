@@ -4,31 +4,31 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"image/draw"
 	"strconv"
 
+	"github.com/aim4ik11/architecture-lab-3/ui"
 	"golang.org/x/exp/shiny/screen"
 )
 
-func getCordsByArgs(width int, height int, floatArgs []float64) []int {
-	if len(floatArgs) % 2 != 0 {
-		return nil
+func getCordsByArgs(width int, height int, floatArgs []float64) ([]int, error) {
+	if len(floatArgs)%2 != 0 {
+		return nil, fmt.Errorf("invalid arg count")
 	}
-	
+
 	cords := make([]int, len(floatArgs))
 
 	fWidth := float64(width)
 	fHeight := float64(height)
 
-	for index := range(floatArgs){
-		if index % 2 == 0 {
+	for index := range floatArgs {
+		if index%2 == 0 {
 			cords[index] = int(fWidth * floatArgs[index])
 		} else {
 			cords[index] = int(fHeight * floatArgs[index])
 		}
 	}
 
-	return cords
+	return cords, nil
 }
 
 func convertArgs(args []string) ([]float64, error) {
@@ -43,53 +43,61 @@ func convertArgs(args []string) ([]float64, error) {
 	return parsedValues, nil
 }
 
-// Operation змінює вхідну текстуру.
 type Operation interface {
-	// Do виконує зміну операції, повертаючи true, якщо текстура вважається готовою для відображення.
-	Do(t screen.Texture) (ready bool)
+	Do(t screen.Texture, state *State) (ready bool)
 }
 
-// OperationList групує список операції в одну.
 type OperationList []Operation
 
-func (ol OperationList) Do(t screen.Texture) (ready bool) {
+func (ol OperationList) Do(t screen.Texture, state *State) (ready bool) {
 	for _, o := range ol {
-		ready = o.Do(t) || ready
+		ready = o.Do(t, state) || ready
 	}
 	return
 }
 
-// UpdateOp операція, яка не змінює текстуру, але сигналізує, що текстуру потрібно розглядати як готову.
 var UpdateOp = updateOp{}
 
 type updateOp struct{}
 
-func (op updateOp) Do(t screen.Texture) bool { return true }
+func (op updateOp) Do(t screen.Texture, state *State) bool {
+	fmt.Println(state)
+	if state.background != nil {
+		t.Fill(t.Bounds(), state.background, screen.Src)
+	} else {
+		t.Fill(t.Bounds(), color.Black, screen.Src)
+	}
+	t.Fill(image.Rectangle{state.bgRect[0], state.bgRect[1]}, color.Black, screen.Src)
+	for _, item := range state.crosses {
+		item.DrawCross(t)
+	}
+	return true
+}
 
 // OperationFunc використовується для перетворення функції оновлення текстури в Operation.
-type OperationFunc func(t screen.Texture)
+type OperationFunc func(t screen.Texture, state *State)
 
-func (f OperationFunc) Do(t screen.Texture) bool {
-	f(t)
+func (f OperationFunc) Do(t screen.Texture, state *State) bool {
+	f(t, state)
 	return false
 }
 
-// WhiteFill зафарбовує тестуру у білий колір. Може бути викоистана як Operation через OperationFunc(WhiteFill).
-func WhiteFill(t screen.Texture) {
-	t.Fill(t.Bounds(), color.White, screen.Src)
+func WhiteFill(t screen.Texture, state *State) {
+	state.background = color.White
 }
 
-// func Test(t screen.Texture) {
-// 	t.Fill()
-// }
-
-// GreenFill зафарбовує тестуру у зелений колір. Може бути викоистана як Operation через OperationFunc(GreenFill).
-func GreenFill(t screen.Texture) {
-	t.Fill(t.Bounds(), color.RGBA{G: 0xff, A: 0xff}, screen.Src)
+func GreenFill(t screen.Texture, state *State) {
+	state.background = color.RGBA{G: 0xff, A: 0xff}
 }
 
-func BlackFill(t screen.Texture) {
-	t.Fill(t.Bounds(), color.Black, screen.Src)
+func BlackFill(t screen.Texture, state *State) {
+	state.background = color.Black
+}
+
+func Reset(t screen.Texture, state *State) {
+	state.background = color.Black
+	state.bgRect = [2]image.Point{{0, 0}, {0, 0}}
+	state.crosses = []*ui.Cross{}
 }
 
 func DrawRectangle(args []string) OperationFunc {
@@ -103,13 +111,12 @@ func DrawRectangle(args []string) OperationFunc {
 		fmt.Println(err)
 		return nil
 	}
-	return func(t screen.Texture) {
-
-		cords := getCordsByArgs(t.Bounds().Dx(), t.Bounds().Dy(), floatArgs)
-
-		startPoint := image.Point{int(cords[0]), int(cords[1])}
-		endPoint := image.Point{int(cords[2]), int(cords[3])}
-		t.Fill(image.Rectangle{startPoint, endPoint}, color.White, screen.Src)
+	return func(t screen.Texture, state *State) {
+		cords, err := getCordsByArgs(t.Bounds().Dx(), t.Bounds().Dy(), floatArgs)
+		if err == nil && len(cords) == 4 {
+			state.bgRect[0] = image.Point{int(cords[0]), int(cords[1])}
+			state.bgRect[1] = image.Point{int(cords[2]), int(cords[3])}
+		}
 	}
 }
 
@@ -124,25 +131,12 @@ func Figure(args []string) OperationFunc {
 		fmt.Println(err)
 		return nil
 	}
-	return func(t screen.Texture) {
-		cords := getCordsByArgs(t.Bounds().Dx(), t.Bounds().Dy(), floatArgs)
-
-		s := 400
-		w := 100
-
-		x := (int(cords[0]) - s/2)
-    y := (int(cords[1]) - s/2)
-
-		x1 := x + s
-    y1 := y + s/2 + w/2
-    y2 := y + s/2 - w/2
-
-    t.Fill(image.Rect(x, y1, x1, y2), color.RGBA{255, 255, 0, 255}, draw.Src)
-
-    x1 = x + s/2 + w/2
-    x2 := x + s/2 - w/2
-    y2 = y + s
-    t.Fill(image.Rect(x1, y, x2, y2), color.RGBA{255, 255, 0, 255}, draw.Src)
+	return func(t screen.Texture, state *State) {
+		cords, err := getCordsByArgs(t.Bounds().Dx(), t.Bounds().Dy(), floatArgs)
+		if err == nil && len(cords) == 2 {
+			cross := ui.NewCross(cords[0], cords[1])
+			state.crosses = append(state.crosses, cross)
+		}
 	}
 }
 
@@ -157,10 +151,11 @@ func Move(args []string) OperationFunc {
 		fmt.Println(err)
 		return nil
 	}
-	return func(t screen.Texture) {
-
-		cords := getCordsByArgs(t.Bounds().Dx(), t.Bounds().Dy(), floatArgs)
-
-		if()
+	return func(t screen.Texture, state *State) {
+		cords, err := getCordsByArgs(t.Bounds().Dx(), t.Bounds().Dy(), floatArgs)
+		if err == nil && len(cords) == 2 {
+			cross := ui.NewCross(cords[0], cords[1])
+			state.crosses = []*ui.Cross{cross}
+		}
 	}
 }

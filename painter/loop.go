@@ -2,21 +2,29 @@ package painter
 
 import (
 	"image"
+	"image/color"
 	"sync"
 
+	"github.com/aim4ik11/architecture-lab-3/ui"
 	"golang.org/x/exp/shiny/screen"
 )
 
-// Receiver отримує текстуру, яка була підготовлена в результаті виконання команд у циклі подій.
 type Receiver interface {
 	Update(t screen.Texture)
 }
 
-// Loop реалізує цикл подій для формування текстури отриманої через виконання операцій отриманих з внутрішньої черги.
+type State struct {
+	background color.Color
+	bgRect     [2]image.Point
+	crosses    []*ui.Cross
+}
+
 type Loop struct {
 	Receiver Receiver
 
-	buffer screen.Texture // текстура, яка зараз формується
+	buffer screen.Texture
+
+	state State
 
 	mq messageQueue
 
@@ -26,17 +34,15 @@ type Loop struct {
 
 var size = image.Pt(800, 800)
 
-// Start запускає цикл подій. Цей метод потрібно запустити до того, як викликати на ньому будь-які інші методи.
 func (l *Loop) Start(s screen.Screen) {
 	l.buffer, _ = s.NewTexture(size)
 	l.stop = make(chan struct{})
 
 	go func() {
 		for !(l.stopReq && l.mq.empty()) {
-
 			op := l.mq.pull()
 
-			update := op.Do(l.buffer)
+			update := op.Do(l.buffer, &l.state)
 
 			if update {
 				l.Receiver.Update(l.buffer)
@@ -46,14 +52,12 @@ func (l *Loop) Start(s screen.Screen) {
 	}()
 }
 
-// Post додає нову операцію у внутрішню чергу.
 func (l *Loop) Post(op Operation) {
 	l.mq.push(op)
 }
 
-// StopAndWait сигналізує про необхідність завершити цикл та блокується до моменту його повної зупинки.
 func (l *Loop) StopAndWait() {
-	l.Post(OperationFunc(func(screen.Texture) {
+	l.Post(OperationFunc(func(screen.Texture, *State) {
 		l.stopReq = true
 	}))
 

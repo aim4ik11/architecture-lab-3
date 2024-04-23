@@ -17,12 +17,10 @@ func main() {
 		parser lang.Parser  // Парсер команд.
 	)
 
-	//pv.Debug = true
 	pv.Title = "Simple painter"
 
 	pv.OnScreenReady = opLoop.Start
 	opLoop.Receiver = &pv
-	parser.CrossAvailable = true
 
 	go func() {
 		http.Handle("/", lang.HttpHandler(&opLoop, &parser))
