@@ -69,7 +69,6 @@ func (l *Loop) StopAndWait() {
 	<-l.stop
 }
 
-// Черга повідомлень, яка використовується для зберігання операцій.
 type messageQueue struct {
 	ops    []Operation
 	mu     sync.Mutex

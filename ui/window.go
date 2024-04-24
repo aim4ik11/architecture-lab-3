@@ -151,11 +151,11 @@ func detectTerminate(e interface{}) bool {
 	switch e := e.(type) {
 	case lifecycle.Event:
 		if e.To == lifecycle.StageDead {
-			return true // Window destroy initiated.
+			return true
 		}
 	case key.Event:
 		if e.Code == key.CodeEscape {
-			return true // Esc pressed.
+			return true
 		}
 	}
 	return false
@@ -164,7 +164,7 @@ func detectTerminate(e interface{}) bool {
 func (pw *Visualizer) handleEvent(e interface{}, t screen.Texture) {
 	switch e := e.(type) {
 
-	case size.Event: // Оновлення даних про розмір вікна.
+	case size.Event:
 		pw.sz = e
 
 	case error:
@@ -182,11 +182,9 @@ func (pw *Visualizer) handleEvent(e interface{}, t screen.Texture) {
 		}
 
 	case paint.Event:
-		// Малювання контенту вікна.
 		if t == nil {
 			pw.drawDefaultUI()
 		} else {
-			// Використання текстури отриманої через виклик Update.
 			pw.w.Scale(pw.sz.Bounds(), t, t.Bounds(), draw.Src, nil)
 		}
 		pw.w.Publish()
@@ -194,11 +192,10 @@ func (pw *Visualizer) handleEvent(e interface{}, t screen.Texture) {
 }
 
 func (pw *Visualizer) drawDefaultUI() {
-	pw.w.Fill(pw.sz.Bounds(), color.Black, draw.Src) // Фон.
+	pw.w.Fill(pw.sz.Bounds(), color.Black, draw.Src)
 	for _, cross := range pw.Crosses {
 		cross.drawCross(pw)
 	}
-	// Малювання білої рамки.
 	for _, br := range imageutil.Border(pw.sz.Bounds(), 10) {
 		pw.w.Fill(br, color.White, draw.Src)
 	}
