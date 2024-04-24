@@ -61,12 +61,7 @@ var UpdateOp = updateOp{}
 type updateOp struct{}
 
 func (op updateOp) Do(t screen.Texture, state *State) bool {
-	fmt.Println(state)
-	if state.background != nil {
-		t.Fill(t.Bounds(), state.background, screen.Src)
-	} else {
-		t.Fill(t.Bounds(), color.Black, screen.Src)
-	}
+	t.Fill(t.Bounds(), state.background, screen.Src)
 	t.Fill(image.Rectangle{state.bgRect[0], state.bgRect[1]}, color.Black, screen.Src)
 	for _, item := range state.crosses {
 		item.DrawCross(t)
@@ -107,7 +102,6 @@ func DrawRectangle(args []string) OperationFunc {
 	}
 	floatArgs, err := convertArgs(args)
 	if err != nil {
-		fmt.Println("Error parsing string")
 		fmt.Println(err)
 		return nil
 	}
@@ -127,7 +121,6 @@ func Figure(args []string) OperationFunc {
 	}
 	floatArgs, err := convertArgs(args)
 	if err != nil {
-		fmt.Println("Error parsing string")
 		fmt.Println(err)
 		return nil
 	}
@@ -147,7 +140,6 @@ func Move(args []string) OperationFunc {
 	}
 	floatArgs, err := convertArgs(args)
 	if err != nil {
-		fmt.Println("Error parsing string")
 		fmt.Println(err)
 		return nil
 	}
