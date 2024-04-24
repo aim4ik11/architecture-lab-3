@@ -1,8 +1,0 @@
-#!/bin/bash
-
-curl -d @- http://localhost:17000 <<EOF
-reset
-green
-bgrect 0.2 0.2 0.8 0.8
-update
-EOF
